@@ -149,4 +149,70 @@ There are few other ways to create mixins some of them are as follows :
 2. Using caching to avoid change of functions.
 3. Currying to combine functions and arguments.
 
- 
+## Views in Backbone.js
+---------------------------------
+
+### Tips and tricks for Views in Backbone.js
+----------------------------------------------
+1. Understanding the el property of a View.
+2. Understanding various attributes used to create a tag in a View.
+
+### Partially Updating a View
+----------------------------------
+
+This is the most common question of most of the developers, a part of the view has to be re-rendered without re-rendering the whole view. for example consider a view which used to a display a lot of complex information and on certain user action only a part of the view has to be updated, if we re-render the whole view for each of the small change it will be a performance blockage. 
+
+```
+var UserView = Backbone.View.extend({
+	template : _.template('<p><% =name %><% =address%></p>'),
+	initialize : function(){
+		this.listenTo(this.model, 'change:address', this.showChangedAddress);
+	},
+	showChangedAddress : function(){
+		// we are using the same main view template here though 
+  		// another subtemplate for only the address part can 
+  		// anyway be used here
+  		var html = this.template(this.model.toJSON()),
+
+    	// Selector of the element whose value needs to be updated
+    	addressElSelector = ".address",
+
+    	// Get only the element with "address" class
+    	addressElement = $(addressElSelector, html);  
+
+  		// Replace only the contents of the .address element
+  		this.$(addressElSelector).replaceWith(addressElement);
+	}
+})
+```
+
+###SubViews : 
+It is essential to understand when we should use sub views and when we shoudl use render the content in the same view
+
+Refer to example code : 
+[Without SubViews](http://jsbin.com/yimori/18/edit?html,js,output)
+[With Subviews](http://jsbin.com/vipife/12/edit?html,js,output)
+
+We used jQuery's $.append() method to add the subview elements to the main view. It is found that if there is a large collection of data, appending view elements to the DOM one by one can create a severe performance issue; this will affect the UI responsiveness of the application. The performance hit can be noticed even in modern browsers, since every append causes a DOM reflow and forces the browser to recalculate the size and position of the DOM tree.
+
+Use documentFragment instead : 
+[Document Fragment](http://ejohn.org/blog/dom-documentfragments)
+This multiple DOM reflow can be avoided by using DocumentFragment, which is described as a lightweight container that can hold DOM nodes. We can collect all of the view elements inside DocumentFragment and then append this fragment to the DOM. This will cause a single reflow for the complete collection, and hence a performance improvement.
+
+```
+render: function () {
+  // create a document fragment
+  var fragment = document.createDocumentFragment();
+
+  this.collection.each(function (model) {
+    // add each view element to the document fragment
+    fragment.appendChild(new UserItemView({
+      model: model
+    }).render().el);
+  }, this);
+
+  // append the fragment to the DOM
+  this.$el.html(fragment);
+  return this;
+}
+```
