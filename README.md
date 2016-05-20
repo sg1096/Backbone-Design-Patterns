@@ -157,6 +157,22 @@ There are few other ways to create mixins some of them are as follows :
 1. Understanding the el property of a View.
 2. Understanding various attributes used to create a tag in a View.
 
+###Some tips related to el property
+--------------------------------------------
+
+
+```
+var UserView = Backbone.View.extend({
+  ...
+  el: '#container'
+});
+
+// render it to document body
+new UserView.render();
+```
+However, this methodology creates problems when you make multiple instances of the UserView class, as all of them point to the same element as given in el, and because the last instance will overwrite the previous ones. However, this can be minimized if you pass the el property each time you create the view instance, though it is not a very good practice. Also, another problem related to view destroy still persists—if you destroy this view, it removes the #container element too—so, if you create another UserView instance passing the same #container element as the el property later, it throws an error. It is good practice to let the view create its own element and make the parent views or the layout manager take care of rendering the view.
+
+
 ### Partially Updating a View
 ----------------------------------
 
