@@ -146,9 +146,108 @@ itemView.startDrag();
 There are few other ways to create mixins some of them are as follows :
 
 1. functional mixins.
+
+Example code : 
+
+```
+// Functional mixin
+var DraggableMixin = function (config) {
+  this.startDrag = function () {};
+  this.onDrag = function () {};
+
+  return this;
+}
+
+// DraggableMixin method is called passing the config object 
+DraggableMixin.call(UserItemView.prototype, {
+  foo: 'bar'
+});
+// SortableMixin.call(UserItemView.prototype);
+
+new UserItemView().startDrag();
+
+```
+
 2. Using caching to avoid change of functions.
+
+Sample Code : 
+
+```
+// Functional mixin with cache
+var DraggableMixin = (function () {
+  var startDrag = function () {};
+  var onDrag = function () {};
+
+  return function (config) {
+    this.startDrag = startDrag;
+    this.onDrag = onDrag;
+
+    return this;
+  };
+})(); 
+
+```
 3. Currying to combine functions and arguments.
 
+"Currying allows us to produce a new function by combining a function and an argument."
+
+```
+// Simple function
+function foo(){
+  console.log(arguments);
+}
+
+
+// We want this bar object to be available in the foo() function
+var bar = {
+  name: 'Saswata Guha'
+};
+
+// Calling foo() without passing anything. Using curry, the 
+// function will have the bar object in its scope
+foo(); 
+
+```
+
+The curry() pattern's definition is quite simple where this method is added to the function prototype, so when it is called on any function, it merges the arguments passed to itself with the arguments of the main function, as shown in the following code snippet:
+
+
+```
+// Definition of curry
+Function.prototype.curry = function () {
+  var slice = Array.prototype.slice,
+    args = slice.apply(arguments),
+    that = this;
+  return function () {
+    return that.apply(null, args.concat(slice.apply(arguments)));
+  };
+};
+
+```
+
+Now let's see how we can apply curry to our DraggableMixin function, so that the config object is available to all its methods, as shown in the following code snippet:
+
+```
+// Functional mixin with cache
+var DraggableMixin = (function () {
+  var startDrag = function (options) {
+    console.log('Options = ', options);
+  };
+  var onDrag = function () {};
+
+  return function (config) {
+    this.startDrag = startDrag.curry(config);
+    this.onDrag = onDrag;
+
+    return this;
+  };
+})();
+
+DraggableMixin.call(UserItemView.prototype, {
+  foo: 'bar'
+});
+
+```
 ## Views in Backbone.js
 ---------------------------------
 
@@ -163,8 +262,8 @@ There are few other ways to create mixins some of them are as follows :
 
 ```
 var UserView = Backbone.View.extend({
-  ...
-  el: '#container'
+  
+    el: '#container'
 });
 
 // render it to document body
